@@ -29,10 +29,10 @@ cd backend
 
 ### 2. Tạo và kích hoạt môi trường ảo
 
-# Tạo môi trường ảo (Windows)
+#### Tạo môi trường ảo (Windows)
 python -m venv env
 
-# Kích hoạt môi trường ảo
+#### Kích hoạt môi trường ảo
 env\Scripts\activate
 
 ### 3. Cài đặt các thư viện cần thiết
