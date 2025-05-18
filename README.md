@@ -79,6 +79,41 @@ Kết quả trả về:
 }
 
 ---
+### Xác thực JWT
+Đăng nhập và lấy token
+
+POST http://127.0.0.1:8000/api/token/
+   Content-Type: application/json
+   
+   {
+     "username": "testuser",
+     "password": "yourpassword"
+   }
+
+Làm mới token khi hết hạn
+
+   POST http://127.0.0.1:8000/api/token/refresh/
+   Content-Type: application/json
+   
+   {
+     "refresh": "your_refresh_token_here"
+   }
+
+Xác thực token
+
+   POST http://127.0.0.1:8000/api/token/verify/
+   Content-Type: application/json
+   
+   {
+     "token": "your_access_token_here"
+   }
+
+JWT cho truy cập API được bảo vệ (như upload endpoint)
+   POST http://127.0.0.1:8000/api/upload/
+   Authorization: Bearer your_access_token_here
+   Content-Type: multipart/form-data
+   
+   (form-data với field "image" và file ảnh)
 
 ## Ghi chú
 Tài khoản testuser / 123456 được tạo để kiểm tra thử api đăng nhập nếu chưa tồn tại.
