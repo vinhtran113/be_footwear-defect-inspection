@@ -1,124 +1,126 @@
-# BE_FOOTWEAR-DEFECT-INSPECTION
+# Hệ thống phát hiện lỗi sản phẩm sử dụng YOLOv8
 
-Backend API cho hệ thống kiểm tra lỗi giày dép, hỗ trợ:
-- Đăng nhập bằng tài khoản có sẵn
-- Upload ảnh và nhận diện lỗi qua model đã huấn luyện
+Hệ thống backend sử dụng YOLOv8 với model `best.pt` để phát hiện lỗi trong hình ảnh sản phẩm.
 
----
+## Cài đặt
 
-## Yêu cầu hệ thống
+### Yêu cầu
+- Python 3.9+
+- Django 5.2
+- Ultralytics 8.2.83
+- OpenCV
+- Thư viện khác (xem `requirements.txt`)
 
-- Python >= 3.9
-- pip
-- Virtualenv (nên dùng)
-- OpenCV (`cv2`)
-- Django
-- djangorestframework
+### Cài đặt các gói phụ thuộc
+```bash
+pip install -r backend/requirements.txt
+```
 
----
+## Chạy server
 
-## Hướng dẫn cài đặt
+```bash
+python backend/manage.py runserver
+```
 
-Mở Command Prompt:
+## API Endpoints
 
-### 1. Clone repository
-
-git clone <repo_url>
-cd be_footwear-defect-inspection
-cd backend
-
-### 2. Tạo và kích hoạt môi trường ảo
-
-#### Tạo môi trường ảo (Windows)
-python -m venv env
-
-#### Kích hoạt môi trường ảo
-env\Scripts\activate
-
-### 3. Cài đặt các thư viện cần thiết
-
-pip install -r requirements.txt
-
-### 4. Chạy migrate database
-
-python manage.py makemigrations
-python manage.py migrate
-
-### 5. Chạy server
-
-python manage.py runserver
-
-Truy cập tại:
-http://127.0.0.1:8000/
-
----
-
-## API Endpoint
-
-### POST /api/login/
-
+### Đăng nhập
+```
+POST /api/login/
+```
+Dữ liệu gửi lên:
+```json
 {
-  "username": "testuser",
-  "password": "123456"
+    "username": "testuser",
+    "password": "123456"
 }
-
-### POST /api/upload/
-
-Dạng multipart/form-data:
-
-Key: image
-
-Value: file ảnh
-
-Kết quả trả về:
-
+```
+Phản hồi:
+```json
 {
-  "msg": "Image uploaded successfully",
-  "image_url": "/media/uploads/abc.jpg",
-  "detection_result": "No defect detected"
+    "refresh": "<refresh_token>",
+    "access": "<access_token>",
+    "msg": "Login successful"
 }
+```
 
----
-### Xác thực JWT
-Đăng nhập và lấy token
+### Phát hiện lỗi trong ảnh
+```
+POST /api/upload/
+```
 
-POST http://127.0.0.1:8000/api/token/
-   Content-Type: application/json
-   
-   {
-     "username": "testuser",
-     "password": "yourpassword"
-   }
+Headers:
+```
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+```
 
-Làm mới token khi hết hạn
+Dữ liệu gửi lên:
+```
+image: <file>
+```
 
-   POST http://127.0.0.1:8000/api/token/refresh/
-   Content-Type: application/json
-   
-   {
-     "refresh": "your_refresh_token_here"
-   }
+Phản hồi:
+```json
+{
+    "msg": "Phát hiện lỗi thành công",
+    "image_url": "/media/uploads/image.jpg",
+    "result_image": "data:image/png;base64,...",
+    "detection_results": [
+        {
+            "class": "scratch",
+            "confidence": 0.87,
+            "box": [100, 200, 300, 400]
+        },
+        {
+            "class": "dent",
+            "confidence": 0.75,
+            "box": [500, 600, 700, 800]
+        }
+    ]
+}
+```
 
-Xác thực token
+## Sử dụng với Python client
 
-   POST http://127.0.0.1:8000/api/token/verify/
-   Content-Type: application/json
-   
-   {
-     "token": "your_access_token_here"
-   }
+Dưới đây là ví dụ về cách sử dụng API từ Python:
 
-JWT cho truy cập API được bảo vệ (như upload endpoint)
-   POST http://127.0.0.1:8000/api/upload/
-   Authorization: Bearer your_access_token_here
-   Content-Type: multipart/form-data
-   
-   (form-data với field "image" và file ảnh)
+```python
+import requests
+import json
+import base64
+import matplotlib.pyplot as plt
+from io import BytesIO
 
-## Ghi chú
-Tài khoản testuser / 123456 được tạo để kiểm tra thử api đăng nhập nếu chưa tồn tại.
+# Đăng nhập
+login_response = requests.post(
+    'http://localhost:8000/api/login/',
+    json={'username': 'testuser', 'password': '123456'}
+)
+token = login_response.json()['access']
 
-Ảnh upload được lưu vào thư mục media/uploads/.
+# Tải ảnh lên và phát hiện lỗi
+headers = {'Authorization': f'Bearer {token}'}
+files = {'image': open('path/to/your/image.jpg', 'rb')}
+
+response = requests.post(
+    'http://localhost:8000/api/upload/',
+    headers=headers,
+    files=files
+)
+
+result = response.json()
+print(f"Kết quả phát hiện: {result['msg']}")
+print(f"Số lượng lỗi phát hiện: {len(result['detection_results'])}")
+
+# Hiển thị ảnh kết quả
+image_data = result['result_image'].split(',')[1]
+image = BytesIO(base64.b64decode(image_data))
+plt.figure(figsize=(10, 8))
+plt.imshow(plt.imread(image))
+plt.axis('off')
+plt.show()
+```
 
 
 

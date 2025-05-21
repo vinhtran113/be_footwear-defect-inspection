@@ -12,6 +12,12 @@ from rest_framework.parsers import MultiPartParser
 from .models import ImageUpload
 from .serializers import ImageUploadSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from ultralytics import YOLO
+import matplotlib.pyplot as plt
+import base64
+from io import BytesIO
+from django.conf import settings
+import json
 
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
@@ -61,17 +67,49 @@ class ImageDetectView(APIView):
             instance = serializer.save()
             image_path = instance.image.path
 
-            # Đọc ảnh gốc từ file
-            img = cv2.imread(image_path)
-
-            # Đoạn code nhận diện
-            # result = your_model.detect(img)
-            # tạm thời giả lập kết quả
-            result = "No defect detected"
+            # Tải model YOLO
+            model_path = os.path.join(settings.BASE_DIR.parent, 'best.pt')
+            model = YOLO(model_path)
+            
+            # Dự đoán đối tượng trong ảnh
+            results = model(image_path, conf=0.25)
+            
+            # Vẽ kết quả lên ảnh
+            result_image = results[0].plot()
+            
+            # Chuyển sang định dạng RGB để hiển thị đúng màu sắc
+            result_rgb = cv2.cvtColor(result_image, cv2.COLOR_BGR2RGB)
+            
+            # Chuyển đổi ảnh thành base64 để trả về API
+            buffer = BytesIO()
+            plt.figure(figsize=(10, 6))
+            plt.imshow(result_rgb)
+            plt.axis('off')
+            plt.savefig(buffer, format='png')
+            plt.close()
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            
+            # Lấy kết quả phát hiện
+            detection_results = []
+            for r in results:
+                boxes = r.boxes
+                for box in boxes:
+                    x1, y1, x2, y2 = box.xyxy[0].tolist()
+                    conf = float(box.conf[0])
+                    cls = int(box.cls[0])
+                    class_name = model.names[cls]
+                    detection_results.append({
+                        'class': class_name,
+                        'confidence': conf,
+                        'box': [x1, y1, x2, y2]
+                    })
 
             return Response({
-                'msg': 'Image uploaded successfully',
+                'msg': 'Phát hiện lỗi thành công',
                 'image_url': instance.image.url,
-                'detection_result': result
+                'result_image': f"data:image/png;base64,{image_base64}",
+                'detection_results': detection_results
             })
+            
         return Response(serializer.errors, status=400)
