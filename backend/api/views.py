@@ -113,3 +113,4 @@ class ImageDetectView(APIView):
             })
             
         return Response(serializer.errors, status=400)
+
