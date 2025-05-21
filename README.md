@@ -1,7 +1,9 @@
 # Hệ thống phát hiện lỗi sản phẩm sử dụng YOLOv8
 
 Hệ thống backend sử dụng YOLOv8 với model `best.pt` để phát hiện lỗi trong hình ảnh sản phẩm.
+link dowload best.pt
 
+    https://drive.google.com/file/d/1UeriZ18Cbp2TbjHgBjjGHTQQI2NODfpA/view?usp=drive_link
 ## Cài đặt
 
 ### Yêu cầu
