@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')  
+
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.views import APIView
@@ -114,3 +117,11 @@ class ImageDetectView(APIView):
             
         return Response(serializer.errors, status=400)
 
+class UploadHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        uploads_path = os.path.join(settings.MEDIA_ROOT, 'uploads')
+        file_names = os.listdir(uploads_path)
+        file_urls = [request.build_absolute_uri(os.path.join(settings.MEDIA_URL, 'uploads', file)) for file in file_names]
+        return Response(file_urls)

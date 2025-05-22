@@ -1,7 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import LoginView, ImageDetectView, UserRegistrationView
+from .views import LoginView, ImageDetectView, UserRegistrationView, UploadHistoryView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -18,6 +18,7 @@ urlpatterns = [
     
     # API endpoints
     path('upload/', ImageDetectView.as_view(), name='upload'),
+    path('history-upload/', UploadHistoryView.as_view(), name='history_upload'),  # <--- thêm dòng này
 ]
 
 if settings.DEBUG:
