@@ -84,45 +84,108 @@ Phản hồi:
 }
 ```
 
-## Sử dụng với Python client
+### Sử dụng Camera USB cho phát hiện lỗi
 
-Dưới đây là ví dụ về cách sử dụng API từ Python:
+#### Điều khiển Camera
 
-```python
-import requests
-import json
-import base64
-import matplotlib.pyplot as plt
-from io import BytesIO
+##### Bật camera:
+```
+POST /api/camera/control/
+```
 
-# Đăng nhập
-login_response = requests.post(
-    'http://localhost:8000/api/login/',
-    json={'username': 'testuser', 'password': '123456'}
-)
-token = login_response.json()['access']
+Headers:
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
 
-# Tải ảnh lên và phát hiện lỗi
-headers = {'Authorization': f'Bearer {token}'}
-files = {'image': open('path/to/your/image.jpg', 'rb')}
+Body:
+```json
+{
+    "action": "start",
+    "camera_id": 0  // Mặc định là 0, có thể thay đổi tùy theo thiết bị
+}
+```
 
-response = requests.post(
-    'http://localhost:8000/api/upload/',
-    headers=headers,
-    files=files
-)
+Phản hồi:
+```json
+{
+    "status": "success",
+    "message": "Camera 0 đã được bật"
+}
+```
 
-result = response.json()
-print(f"Kết quả phát hiện: {result['msg']}")
-print(f"Số lượng lỗi phát hiện: {len(result['detection_results'])}")
+##### Tắt camera:
+```
+POST /api/camera/control/
+```
 
-# Hiển thị ảnh kết quả
-image_data = result['result_image'].split(',')[1]
-image = BytesIO(base64.b64decode(image_data))
-plt.figure(figsize=(10, 8))
-plt.imshow(plt.imread(image))
-plt.axis('off')
-plt.show()
+Headers:
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+Body:
+```json
+{
+    "action": "stop"
+}
+```
+
+Phản hồi:
+```json
+{
+    "status": "success",
+    "message": "Camera đã được tắt"
+}
+```
+
+##### Kiểm tra trạng thái camera:
+```
+GET /api/camera/control/
+```
+
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+
+Phản hồi:
+```json
+{
+    "status": "success",
+    "camera_running": true
+}
+```
+
+#### Chụp ảnh và phát hiện lỗi
+
+##### Chụp và phát hiện:
+```
+POST /api/camera/capture/
+```
+
+Headers:
+```
+Authorization: Bearer <access_token>
+```
+
+Phản hồi:
+```json
+{
+    "status": "success",
+    "message": "Đã chụp và phát hiện thành công",
+    "result_image": "data:image/png;base64,...",
+    "detection_results": [
+        {
+            "class": "scratch",
+            "confidence": 0.87,
+            "box": [100, 200, 300, 400]
+        }
+    ],
+    "timestamp": 1621234567.890
+}
 ```
 
 
