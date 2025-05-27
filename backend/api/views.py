@@ -22,6 +22,7 @@ from io import BytesIO
 from django.conf import settings
 import json
 from .camera import camera_manager
+from .camera import camera_manager
 
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
