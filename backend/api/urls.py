@@ -1,7 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import LoginView, ImageDetectView, UserRegistrationView, UploadHistoryView
+from .views import LoginView, ImageDetectView, VideoDetectView, RealTimeDetectView, UserRegistrationView, UploadHistoryView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -18,6 +18,10 @@ urlpatterns = [
     
     # API endpoints
     path('upload/', ImageDetectView.as_view(), name='upload'),
+    path('upload-video/', VideoDetectView.as_view(), name='upload_video'),
+    path('realtime/', RealTimeDetectView.as_view(), name='realtime'),
+
+
     path('history-upload/', UploadHistoryView.as_view(), name='history_upload'),  # <--- thêm dòng này
 ]
 
