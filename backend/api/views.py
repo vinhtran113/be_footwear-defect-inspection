@@ -20,8 +20,14 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 from django.conf import settings
+
 from PIL import Image
 import tempfile
+
+
+# import json
+# from .camera import camera_manager
+# from .camera import camera_manager
 
 
 class UserRegistrationView(APIView):
@@ -245,3 +251,119 @@ class UploadHistoryView(APIView):
         file_names = os.listdir(uploads_path)
         file_urls = [request.build_absolute_uri(os.path.join(settings.MEDIA_URL, 'uploads', file)) for file in file_names]
         return Response(file_urls)
+
+# Thêm các views mới cho camera
+class CameraControlView(APIView):
+    """API để điều khiển camera USB"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Bật/tắt camera hoặc thay đổi cài đặt"""
+        action = request.data.get('action')
+        
+        if action == 'start':
+            camera_id = request.data.get('camera_id', 0)
+            success = camera_manager.start_camera(camera_id=int(camera_id))
+            if success:
+                return Response({'status': 'success', 'message': f'Camera {camera_id} đã được bật'})
+            else:
+                return Response({
+                    'status': 'error', 
+                    'message': f'Không thể bật camera {camera_id}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        elif action == 'stop':
+            camera_manager.stop_camera()
+            return Response({'status': 'success', 'message': 'Camera đã được tắt'})
+            
+        return Response({
+            'status': 'error', 
+            'message': 'Hành động không hợp lệ'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get(self, request):
+        """Kiểm tra trạng thái camera"""
+        is_running = camera_manager.is_running
+        return Response({
+            'status': 'success',
+            'camera_running': is_running
+        })
+
+class CameraDetectionView(APIView):
+    """API để lấy kết quả phát hiện từ camera theo thời gian thực"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Lấy kết quả phát hiện mới nhất"""
+        if not camera_manager.is_running:
+            return Response({
+                'status': 'error', 
+                'message': 'Camera chưa được bật'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        detection = camera_manager.get_latest_detection()
+        
+        if detection is None:
+            return Response({
+                'status': 'pending', 
+                'message': 'Đang chờ kết quả phát hiện đầu tiên'
+            })
+            
+        return Response({
+            'status': 'success',
+            'result_image': detection['result_image'],
+            'detection_results': detection['detection_results'],
+            'timestamp': detection['timestamp']
+        })
+    
+    def post(self, request):
+        """Yêu cầu phát hiện ngay lập tức (không đợi vòng lặp)"""
+        if not camera_manager.is_running:
+            return Response({
+                'status': 'error', 
+                'message': 'Camera chưa được bật'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        detection = camera_manager.process_frame()
+        
+        if detection is None:
+            return Response({
+                'status': 'error', 
+                'message': 'Không thể thực hiện phát hiện'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        return Response({
+            'status': 'success',
+            'result_image': detection['result_image'],
+            'detection_results': detection['detection_results'],
+            'timestamp': detection['timestamp']
+        })
+
+class CameraCaptureView(APIView):
+    """API để chụp một frame từ camera và phát hiện lỗi"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Chụp một frame mới và thực hiện phát hiện"""
+        if not camera_manager.is_running:
+            return Response({
+                'status': 'error', 
+                'message': 'Camera chưa được bật'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Chụp và xử lý frame mới
+        detection = camera_manager.capture_and_process_frame()
+        
+        if detection is None:
+            return Response({
+                'status': 'error', 
+                'message': 'Không thể chụp hoặc xử lý frame'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        return Response({
+            'status': 'success',
+            'message': 'Đã chụp và phát hiện thành công',
+            'result_image': detection['result_image'],
+            'detection_results': detection['detection_results'],
+            'timestamp': detection['timestamp']
+        })
