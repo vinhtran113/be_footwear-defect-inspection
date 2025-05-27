@@ -25,9 +25,9 @@ from PIL import Image
 import tempfile
 
 
-# import json
-# from .camera import camera_manager
-# from .camera import camera_manager
+import json
+from .camera import camera_manager
+from .camera import camera_manager
 
 
 class UserRegistrationView(APIView):

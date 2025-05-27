@@ -2,7 +2,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from .views import LoginView, ImageDetectView, UserRegistrationView, UploadHistoryView, CameraControlView, CameraDetectionView, CameraCaptureView
+from .views import LoginView, ImageDetectView, VideoDetectView, RealTimeDetectView, UserRegistrationView, UploadHistoryView, CameraControlView, CameraDetectionView, CameraCaptureView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -26,10 +26,10 @@ urlpatterns = [
     path('history-upload/', UploadHistoryView.as_view(), name='history_upload'),  # <--- thêm dòng này
   
     # Camera endpoints
-#     path('camera/control/', CameraControlView.as_view(), name='camera_control'),
-#     path('camera/detection/', CameraDetectionView.as_view(), name='camera_detection'),
-#     path('camera/capture/', CameraCaptureView.as_view(), name='camera_capture'),
+    path('camera/control/', CameraControlView.as_view(), name='camera_control'),
+    path('camera/detection/', CameraDetectionView.as_view(), name='camera_detection'),
+    path('camera/capture/', CameraCaptureView.as_view(), name='camera_capture'),
 
-
+]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
