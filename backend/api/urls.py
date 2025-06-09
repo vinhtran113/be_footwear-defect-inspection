@@ -2,7 +2,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from .views import LoginView, ImageDetectView, VideoDetectView, RealTimeDetectView, UserRegistrationView, UploadHistoryView, CameraControlView, CameraDetectionView, CameraCaptureView
+from .views import LoginView, UserRegistrationView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -16,19 +16,6 @@ urlpatterns = [
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('register/', UserRegistrationView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
-    
-    # API endpoints
-    path('upload/', ImageDetectView.as_view(), name='upload'),
-    path('upload-video/', VideoDetectView.as_view(), name='upload_video'),
-    path('realtime/', RealTimeDetectView.as_view(), name='realtime'),
-
-
-    path('history-upload/', UploadHistoryView.as_view(), name='history_upload'),  # <--- thêm dòng này
-  
-    # Camera endpoints
-    path('camera/control/', CameraControlView.as_view(), name='camera_control'),
-    path('camera/detection/', CameraDetectionView.as_view(), name='camera_detection'),
-    path('camera/capture/', CameraCaptureView.as_view(), name='camera_capture'),
 
 ]
 if settings.DEBUG:
